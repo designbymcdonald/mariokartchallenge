@@ -1,0 +1,114 @@
+#include "robot-config.h"
+   
+void joystick(float oldX, float y) {
+    float x = oldX * 60.0/127.0;
+    float left = (y - x) * 100/127;
+    float right = (y + x) * 100/127;
+    if (left == 0) {
+        leftMotor.stop(vex::brakeType::brake);
+        rightMotor.stop(vex::brakeType::brake);
+        leftBackMotor.stop(vex::brakeType::brake);
+        rightBackMotor.stop(vex::brakeType::brake);
+    } else {
+        leftMotor.spin(vex::directionType::fwd, left, vex::velocityUnits::pct);
+        rightMotor.spin(vex::directionType::rev, right, vex::velocityUnits::pct);
+        leftBackMotor.spin(vex::directionType::fwd, left, vex::velocityUnits::pct);
+        rightBackMotor.spin(vex::directionType::rev, right, vex::velocityUnits::pct);
+    }
+}
+
+bool fireworks = false;
+bool fireworksWasPressed = false;
+
+bool slow = false;
+bool slowWasPressed = false;
+
+vex::color randomColor() {
+    int x = rand() % 8 + 1;
+    switch (x) {
+        case(1): 
+            return vex::color::white;
+            break;
+        case(2): 
+            return vex::color::red;
+            break;
+        case(3): 
+            return vex::color::green;
+            break;
+        case(4): 
+            return vex::color::blue;
+            break;
+        case(5): 
+            return vex::color::yellow;
+            break;
+        case(6): 
+            return vex::color::orange;
+            break;
+        case(7): 
+            return vex::color::purple;
+            break;
+        default: 
+            return vex::color::cyan;
+            break;
+    }
+}
+
+
+int main() {
+    while(true) {
+        if (slow || Controller.ButtonL1.pressing() || Controller.ButtonR1.pressing()) {
+            joystick(Controller.Axis1.value()/2, Controller.Axis3.value()/2);
+        } else if (Controller.ButtonL2.pressing() || Controller.ButtonR2.pressing()) {
+            joystick(Controller.Axis1.value()/4, Controller.Axis3.value()/4);
+        } else {
+            joystick(Controller.Axis1.value(), Controller.Axis3.value());
+        }
+        if (Controller.ButtonB.pressing()) {
+            if (!slowWasPressed) {
+                slow = !slow;
+                slowWasPressed = true;
+            }
+        } else {
+            slowWasPressed = false;
+        }
+        if (Controller.ButtonX.pressing()) {
+            Brain.Screen.setPenColor(randomColor());
+            if (!fireworksWasPressed) {
+                fireworks = !fireworks;
+                fireworksWasPressed = true;
+                if (fireworks) {
+                    Brain.resetTimer();
+                    Brain.Screen.setPenColor(randomColor());
+                    Brain.Screen.setPenWidth(15);
+                } else {
+                    Brain.Screen.clearScreen();
+                }
+            }
+        } else {
+            fireworksWasPressed = false;
+        }
+        if (fireworks) {
+            int time = Brain.timer(vex::timeUnits::msec);
+            if (time > 350) {
+                Brain.Screen.clearScreen();
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 0, 136);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 0, 0);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 240, 0);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 480, 0);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 480, 136);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 480, 272);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 240, 272);
+                Brain.Screen.setPenColor(randomColor());
+                Brain.Screen.drawLine(240, 136, 0, 272);
+                Brain.resetTimer();
+            }
+        }
+    }
+} 
